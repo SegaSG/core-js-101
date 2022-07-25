@@ -20,8 +20,12 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  const object = {};
+  object.width = width;
+  object.height = height;
+  object.getArea = () => width * height;
+  return object;
 }
 
 
@@ -35,8 +39,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,8 +55,10 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const object = Object.create(proto);
+  Object.assign(object, JSON.parse(json));
+  return object;
 }
 
 
@@ -109,34 +115,99 @@ function fromJSON(/* proto, json */) {
  *
  *  For more examples see unit tests.
  */
-
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  countErrText: 'Element, id and pseudo-element should not occur more then one time inside the selector',
+  orderErrText: 'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+
+  element(value) {
+    if (this.elVal) throw new Error(this.countErrText);
+    if (this.idVal) throw new Error(this.orderErrText);
+    const obj = { ...this };
+    if (!obj.elVal) {
+      obj.elVal = value;
+    } else {
+      obj.elVal += value;
+    }
+    return obj;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.idVal) throw new Error(this.countErrText);
+    if (this.classVal || this.pseudoEl) throw new Error(this.orderErrText);
+    const obj = { ...this };
+    if (!obj.idVal) {
+      obj.idVal = `#${value}`;
+    } else {
+      obj.idVal += `#${value}`;
+    }
+    return obj;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    if (this.attrVal) throw new Error(this.orderErrText);
+    const obj = { ...this };
+    if (!obj.classVal) {
+      obj.classVal = `.${value}`;
+    } else {
+      obj.classVal += `.${value}`;
+    }
+    return obj;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    if (this.pseudoCl) throw new Error(this.orderErrText);
+    const obj = { ...this };
+    if (!obj.attrVal) {
+      obj.attrVal = `[${value}]`;
+    } else {
+      obj.attrVal += `[${value}]`;
+    }
+    return obj;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    if (this.pseudoEl) throw new Error(this.orderErrText);
+    const obj = { ...this };
+    if (!obj.pseudoCl) {
+      obj.pseudoCl = `:${value}`;
+    } else {
+      obj.pseudoCl += `:${value}`;
+    }
+    return obj;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    if (this.pseudoEl) throw new Error(this.countErrText);
+    const obj = { ...this };
+    if (!obj.pseudoEl) {
+      obj.pseudoEl = `::${value}`;
+    } else {
+      obj.pseudoEl += `::${value}`;
+    }
+    return obj;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const obj = { ...this };
+    const value = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    if (!obj.value) {
+      obj.value = value;
+    } else {
+      obj.value += value;
+    }
+    return obj;
+  },
+
+  stringify() {
+    if (this.value) return this.value;
+    let res = '';
+    if (this.elVal) res += this.elVal;
+    if (this.idVal) res += this.idVal;
+    if (this.classVal) res += this.classVal;
+    if (this.attrVal) res += this.attrVal;
+    if (this.pseudoCl) res += this.pseudoCl;
+    if (this.pseudoEl) res += this.pseudoEl;
+    return res;
   },
 };
 
